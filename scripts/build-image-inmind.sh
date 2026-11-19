@@ -17,8 +17,8 @@ U="$(id -u):$(id -g)"
 echo "== $NAME:$VERSION (go $GO_VERSION)"
 
 echo "== 1/3 web"
-docker run --rm -u "$U" -e HOME=/tmp -e npm_config_cache=/tmp/npm -v "$PWD/web:/web" -w /web node:22-bookworm \
-  -e V="${VERSION#v}" sh -c 'npm ci --no-audit --no-fund --loglevel=error && rm -rf out .next \
+docker run --rm -u "$U" -e HOME=/tmp -e npm_config_cache=/tmp/npm -e V="${VERSION#v}" -v "$PWD/web:/web" -w /web node:22-bookworm \
+  sh -c 'npm ci --no-audit --no-fund --loglevel=error && rm -rf out .next \
     && npm version "$V" --no-git-tag-version --allow-same-version >/dev/null && npm run build:static >/dev/null'
 git checkout -- web/package.json web/package-lock.json   # version stamp is for this build only (as upstream CI)
 rm -rf server/webui/dist server/skillsdist && mkdir -p server/webui/dist server/skillsdist
