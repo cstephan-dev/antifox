@@ -5,6 +5,7 @@
 
 import i18n from "@/i18n/config";
 import { TOKEN_KEY } from "@/lib/auth";
+import { trAgent, trMCP, trPermissions, trPromptVars, trRole, trUser } from "@/lib/builtin-i18n";
 import { MOCK } from "@/lib/mock/enabled";
 import { mockHandle } from "@/lib/mock/handler";
 import type {
@@ -445,8 +446,9 @@ export const api = {
     post<{ ok: boolean }>("/llm/roles", { role, profile_id: Number(profileId) || 0 }),
 
   // ---- agents ----
-  agents: () => get<{ agents: Agent[] }>("/agents").then((r) => arr(r.agents)),
-  getAgent: (key: string) => get<AgentDetail>(`/agents/${key}`),
+  agents: () => get<{ agents: Agent[] }>("/agents").then((r) => arr(r.agents).map(trAgent)),
+  getAgent: (key: string) =>
+    get<AgentDetail>(`/agents/${key}`).then((d) => ({ ...d, agent: trAgent(d.agent), variables: trPromptVars(key, arr(d.variables)) })),
   createAgent: (key: string, name: string, description = "") =>
     post<Agent>("/agents", { key, name, description }),
   updateAgent: (key: string, name: string, description = "") =>
@@ -494,7 +496,8 @@ export const api = {
   saveAgentConfig: (key: string, patch: { max_turns: number; run_seconds?: number; web_search?: boolean; interactive_shell?: boolean; llm_profile_id?: number }) =>
     put<{ ok: boolean }>(`/agents/${key}/config`, patch),
   agentPromptVersions: (key: string) => get<{ versions: PromptVersion[] }>(`/agents/${key}/prompts`).then((r) => arr(r.versions)),
-  agentVariables: (key: string) => get<{ variables: PromptVar[] }>(`/agents/${key}/variables`).then((r) => arr(r.variables)),
+  agentVariables: (key: string) =>
+    get<{ variables: PromptVar[] }>(`/agents/${key}/variables`).then((r) => trPromptVars(key, arr(r.variables))),
   previewAgentPrompt: (key: string, template: string, sample?: Record<string, string>) =>
     post<{ rendered: string; error?: string }>(`/agents/${key}/prompt/preview`, { template, sample }),
   getAgentVisibility: (key: string) => get<{ mcp: number[]; skill: string[] }>(`/agents/${key}/visibility`),
@@ -516,7 +519,7 @@ export const api = {
   detectPython: () => post<{ python_interpreter: string }>("/settings/python/detect", {}),
 
   // ---- mcp ----
-  mcpServers: () => get<{ servers: MCPServer[] }>("/mcp").then((r) => arr(r.servers)),
+  mcpServers: () => get<{ servers: MCPServer[] }>("/mcp").then((r) => arr(r.servers).map(trMCP)),
   saveMcpServer: (m: Partial<MCPServer>) => post<{ id: number }>("/mcp", m),
   deleteMcpServer: (id: number) => del<{ deleted: number }>(`/mcp/${id}`),
   mcpTools: (id: number) => get<{ tools: MCPTool[] }>(`/mcp/${id}/tools`).then((r) => arr(r.tools)),
@@ -641,16 +644,25 @@ export const api = {
   },
 
   // ---- 平台权限 RBAC ----
-  rbacMe: () => get<RBACMe>("/rbac/me"),
+  rbacMe: () =>
+    get<RBACMe>("/rbac/me").then((m) => ({
+      ...m,
+      user: { ...m.user, display_name: trUser({ ...m.user, is_builtin: m.user?.id === "admin" }).display_name },
+      roles: arr(m.roles).map(trRole),
+    })),
   rbacMetadata: () =>
-    get<{ permissions: Record<string, string>; roles: RBACRole[]; scopes: string[] }>("/rbac/metadata"),
-  rbacUsers: () => get<{ users: RBACUser[] }>("/rbac/users").then((r) => arr(r.users)),
+    get<{ permissions: Record<string, string>; roles: RBACRole[]; scopes: string[] }>("/rbac/metadata").then((m) => ({
+      ...m,
+      permissions: trPermissions(m.permissions ?? {}),
+      roles: arr(m.roles).map(trRole),
+    })),
+  rbacUsers: () => get<{ users: RBACUser[] }>("/rbac/users").then((r) => arr(r.users).map(trUser)),
   rbacCreateUser: (b: { username: string; display_name: string; password: string; enabled?: boolean; role_ids: string[] }) =>
     post<{ user: RBACUser }>("/rbac/users", b),
   rbacUpdateUser: (id: string, b: { display_name?: string; enabled?: boolean; role_ids?: string[]; password?: string }) =>
     put<{ ok: boolean }>(`/rbac/users/${id}`, b),
   rbacDeleteUser: (id: string) => del<{ ok: boolean }>(`/rbac/users/${id}`),
-  rbacRoles: () => get<{ roles: RBACRole[] }>("/rbac/roles").then((r) => arr(r.roles)),
+  rbacRoles: () => get<{ roles: RBACRole[] }>("/rbac/roles").then((r) => arr(r.roles).map(trRole)),
   rbacCreateRole: (b: { name: string; description: string; scope: string; permissions: string[] }) =>
     post<{ role: RBACRole }>("/rbac/roles", b),
   rbacUpdateRole: (id: string, b: { name: string; description: string; scope: string; permissions: string[] }) =>

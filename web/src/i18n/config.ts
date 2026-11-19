@@ -34,7 +34,8 @@ if (!i18n.isInitialized) {
       "en-US": { translation: enUS },
     },
     lng: DEFAULT_LANG,
-    fallbackLng: DEFAULT_LANG,
+    // zh-TW: a key it lacks falls back to Simplified Chinese (closer than the default language)
+    fallbackLng: { "zh-TW": ["zh-CN", DEFAULT_LANG], default: [DEFAULT_LANG] },
     interpolation: { escapeValue: false },
     returnNull: false,
   });
