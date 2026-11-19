@@ -228,7 +228,21 @@
     "submit": "登录",
     "submitting": "登录中...",
     "errBackend": "无法连接到后端服务",
-    "errFailed": "登录失败，请重试"
+    "errFailed": "登录失败，请重试",
+    "ssoButton": "使用 {{label}} 登录",
+    "usePassword": "使用用户名和密码登录",
+    "useLocalAccount": "本地账号（管理员）",
+    "ssoErr": {
+      "failed": "单点登录失败，请重试",
+      "state": "登录超时或在其他浏览器中发起，请重试",
+      "idp": "身份提供方拒绝了登录",
+      "no_role": "您的账号无权访问 AntiFox，请联系管理员将您加入 AntiFox 组。",
+      "disabled": "账号已停用",
+      "conflict": "该身份无法关联到已有账号，请联系管理员。",
+      "no_account": "您还没有 AntiFox 账号，请联系管理员创建。",
+      "unavailable": "身份提供方暂时不可达，请稍后重试",
+      "not_initialized": "AntiFox 尚未完成初始化"
+    }
   },
   "setup": {
     "title": "初始化密码",

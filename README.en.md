@@ -96,6 +96,8 @@ CGO_ENABLED=0 go build -tags embedui -o antifox ./cmd/antifox
 
 Full steps (skill embedding, dev hot-reload) are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
+> **Single sign-on:** OpenID Connect login (Keycloak, Entra ID, Okta, …) with group → role mapping is optional and configured with environment variables — see [deploy/OIDC.md](deploy/OIDC.md).
+
 > **One-click update:** for a binary/source deploy, launch via `./start.sh` or systemd (see [`deploy/antifox.service`](deploy/antifox.service), set `RestartForceExitStatus=75`) to check for and install new versions from **System Settings** (SHA256 verify / atomic swap / rollback; data unaffected). For Docker, use `docker compose pull`.
 
 ## More Screens

@@ -3,6 +3,7 @@ module antifox
 go 1.26.3
 
 require (
+	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/creack/pty v1.1.24
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/hinshun/vt10x v0.0.0-20220301184237-5011da428d02
@@ -12,6 +13,7 @@ require (
 	github.com/projectdiscovery/dnsx v1.2.3
 	golang.org/x/crypto v0.54.0
 	golang.org/x/net v0.56.0
+	golang.org/x/oauth2 v0.38.0
 	gopkg.in/yaml.v3 v3.0.1
 	modernc.org/sqlite v1.52.0
 )
@@ -22,6 +24,7 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/gaissmai/bart v0.26.0 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
