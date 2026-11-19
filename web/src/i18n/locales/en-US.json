@@ -1953,5 +1953,113 @@
   },
   "meta": {
     "title": "AntiFox — Autonomous Penetration Testing Console"
+  },
+  "builtinData": {
+    "agent": {
+      "goals": {
+        "name": "Goal breakdown",
+        "desc": "Breaks the engagement goal into independent, verifiable sub-goals."
+      },
+      "planner": {
+        "name": "Planner",
+        "desc": "Reads the situation and judges the goals; adds exploration intents only where a genuinely uncovered direction exists (one planning loop per task)."
+      },
+      "mainagent": {
+        "name": "Main",
+        "desc": "Human interface: watches progress and turns the operator's intent into hints or high-priority intents."
+      },
+      "worker": {
+        "name": "Worker",
+        "desc": "Takes one intent, executes it, writes the facts/vulnerabilities found back to the knowledge graph, then stops."
+      },
+      "auto": {
+        "name": "Auto",
+        "desc": "Platform assistant: manages tasks (create/view/pause/give hints) and assets with tools, and can create/modify skills, custom tools and MCP servers."
+      },
+      "pentest": {
+        "name": "Pentest",
+        "desc": "Standalone pentest agent: runs the whole chain alone — recon → attack surface → exploitation → verification → wrap-up — planning, executing and adversarially verifying its own work."
+      }
+    },
+    "var": {
+      "goals": {
+        "EngagementDescription": "Engagement description (target/background)",
+        "Now": "Server's current time (RFC3339)"
+      },
+      "planner": {
+        "Goal": "Overall task goal",
+        "AssetSummary": "Asset counts / type distribution summary (optional)"
+      },
+      "mainagent": {
+        "Goal": "Current task goal",
+        "AssetSummary": "Initial situation summary (optional)",
+        "FindingsSummary": "Confirmed vulnerabilities summary (optional)"
+      },
+      "worker": {
+        "ProxyAddr": "Recording proxy address (selects the if/else wording)",
+        "WorkerName": "Worker self-identifier (optional)"
+      }
+    },
+    "role": {
+      "admin": {
+        "name": "Administrator",
+        "desc": "Global administrative permissions"
+      },
+      "operator": {
+        "name": "Operator",
+        "desc": "Runs day-to-day security workflows; cannot manage accounts or core configuration"
+      },
+      "auditor": {
+        "name": "Auditor",
+        "desc": "Read-only access to audit, monitoring and assets"
+      },
+      "viewer": {
+        "name": "Viewer",
+        "desc": "Read-only access to assigned resources"
+      }
+    },
+    "perm": {
+      "auth:self": "Manage own sessions and password",
+      "dashboard:read": "View the dashboard overview",
+      "task:read": "View tasks / exploration chains / sessions",
+      "task:write": "Create / control tasks, send chat guidance",
+      "task:delete": "Delete tasks",
+      "finding:read": "View findings",
+      "finding:write": "Create / update findings",
+      "finding:delete": "Delete findings",
+      "traffic:read": "View traffic recordings",
+      "asset:read": "View assets / companies",
+      "asset:write": "Create / import / sync assets",
+      "asset:delete": "Delete assets",
+      "llm:read": "View LLM configuration",
+      "llm:write": "Manage LLM configuration and models",
+      "agent:read": "View agent configuration",
+      "agent:write": "Manage agents / prompts / triggers",
+      "mcp:read": "View MCP servers",
+      "mcp:write": "Manage MCP servers",
+      "skill:read": "View skills",
+      "skill:write": "Create / update skills",
+      "skill:delete": "Delete skills",
+      "tool:read": "View tools",
+      "tool:write": "Manage tools / custom tools",
+      "intercept:read": "View intercept rules / approvals",
+      "intercept:write": "Manage intercept rules / handle approvals",
+      "log:read": "View backend logs / audit",
+      "config:read": "View system configuration",
+      "config:write": "Change system configuration",
+      "knowledge:read": "View / search the knowledge base",
+      "knowledge:write": "Create / update knowledge documents, configure the embedder",
+      "knowledge:delete": "Delete knowledge documents",
+      "report:read": "View / download reports, templates and report settings",
+      "report:write": "Generate reports, manage templates and report settings",
+      "report:delete": "Delete reports / templates",
+      "rbac:read": "View users / roles / permissions",
+      "rbac:write": "Manage users / roles / permissions"
+    },
+    "mcp": {
+      "filesystem": "Read and write the local file system — store payloads, script output, discovered configuration files etc. during a pentest",
+      "github": "GitHub repository recon — search public code for leaked credentials, keys and sensitive configuration, or analyse the target organisation's open-source code (enable after entering GITHUB_PERSONAL_ACCESS_TOKEN on the MCP page)"
+    },
+    "adminDisplayName": "Administrator"
   }
 }

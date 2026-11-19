@@ -1953,5 +1953,113 @@
   },
   "meta": {
     "title": "AntiFox — 自主渗透测试控制台"
+  },
+  "builtinData": {
+    "agent": {
+      "goals": {
+        "name": "目标拆解",
+        "desc": "把渗透任务目标拆解成若干独立、可验证的子目标。"
+      },
+      "planner": {
+        "name": "规划",
+        "desc": "读取态势、判定目标，只在确有未覆盖的新方向时补充探索意图（每任务一个规划循环）。"
+      },
+      "mainagent": {
+        "name": "主",
+        "desc": "人机接口：观察进展，把人的意图落成 hint 或高优先级意图。"
+      },
+      "worker": {
+        "name": "执行",
+        "desc": "领取一条意图执行，把发现的事实/漏洞写回知识图谱后停止。"
+      },
+      "auto": {
+        "name": "Auto",
+        "desc": "平台操作助手：用工具管理任务(建/看/暂停/给提示)与资产，并可创建/修改 skill、自定义工具、MCP。"
+      },
+      "pentest": {
+        "name": "渗透测试",
+        "desc": "独立渗透 agent：一人从侦察→找攻击面→深入利用→验证→收尾走完整条链，自己规划、自己执行、自己对抗式验证。"
+      }
+    },
+    "var": {
+      "goals": {
+        "EngagementDescription": "任务描述（测试对象/背景）",
+        "Now": "服务端当前时间(RFC3339)"
+      },
+      "planner": {
+        "Goal": "任务总目标",
+        "AssetSummary": "资产计数/类型分布摘要(可选)"
+      },
+      "mainagent": {
+        "Goal": "当前任务目标",
+        "AssetSummary": "开局态势摘要(可选)",
+        "FindingsSummary": "已确认漏洞摘要(可选)"
+      },
+      "worker": {
+        "ProxyAddr": "记录代理地址(驱动 if 双文案)",
+        "WorkerName": "worker 自我标识(可选)"
+      }
+    },
+    "role": {
+      "admin": {
+        "name": "管理员",
+        "desc": "全局管理权限"
+      },
+      "operator": {
+        "name": "操作员",
+        "desc": "可执行日常安全工作流，不能管理账号与核心配置"
+      },
+      "auditor": {
+        "name": "审计员",
+        "desc": "只读查看审计、监控与资产"
+      },
+      "viewer": {
+        "name": "只读用户",
+        "desc": "只读查看被授权资源"
+      }
+    },
+    "perm": {
+      "auth:self": "管理自己的会话和密码",
+      "dashboard:read": "查看仪表盘总览",
+      "task:read": "查看任务 / 探索链路 / 会话",
+      "task:write": "创建 / 控制任务、发送对话引导",
+      "task:delete": "删除任务",
+      "finding:read": "查看漏洞发现",
+      "finding:write": "创建 / 更新漏洞发现",
+      "finding:delete": "删除漏洞发现",
+      "traffic:read": "查看流量录制",
+      "asset:read": "查看资产 / 公司",
+      "asset:write": "创建 / 导入 / 同步资产",
+      "asset:delete": "删除资产",
+      "llm:read": "查看 LLM 配置",
+      "llm:write": "管理 LLM 配置与模型",
+      "agent:read": "查看 Agent 配置",
+      "agent:write": "管理 Agent / 提示词 / 触发器",
+      "mcp:read": "查看 MCP 服务",
+      "mcp:write": "管理 MCP 服务",
+      "skill:read": "查看技能",
+      "skill:write": "创建 / 更新技能",
+      "skill:delete": "删除技能",
+      "tool:read": "查看工具",
+      "tool:write": "管理工具 / 自定义工具",
+      "intercept:read": "查看拦截规则 / 审批",
+      "intercept:write": "管理拦截规则 / 处理审批",
+      "log:read": "查看后端日志 / 审计",
+      "config:read": "查看系统配置",
+      "config:write": "修改系统配置",
+      "knowledge:read": "查看知识库 / 检索",
+      "knowledge:write": "创建 / 更新知识库文档、配置 embedder",
+      "knowledge:delete": "删除知识库文档",
+      "report:read": "查看 / 下载报告、模版与报告设置",
+      "report:write": "生成报告、管理模版与报告设置",
+      "report:delete": "删除报告 / 模版",
+      "rbac:read": "查看用户 / 角色 / 权限",
+      "rbac:write": "管理用户 / 角色 / 权限"
+    },
+    "mcp": {
+      "filesystem": "读写本地文件系统——在渗透测试中存取载荷、脚本输出、发现的配置文件等",
+      "github": "GitHub 仓库侦察——搜索公开代码库中可能泄露的凭据、密钥、敏感配置，或分析目标组织开源项目代码（需在 MCP 页填入 GITHUB_PERSONAL_ACCESS_TOKEN 后启用）"
+    },
+    "adminDisplayName": "管理员"
   }
 }
