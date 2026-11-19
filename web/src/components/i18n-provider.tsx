@@ -16,5 +16,15 @@ export function I18nProvider({ children }: { readonly children: React.ReactNode 
     if (typeof document !== "undefined") document.documentElement.lang = lang;
   }, []);
 
+  // <title> is rendered at build time (app-config.ts); keep it in the selected language.
+  useEffect(() => {
+    const sync = () => {
+      if (typeof document !== "undefined") document.title = i18n.t("meta.title");
+    };
+    sync();
+    i18n.on("languageChanged", sync);
+    return () => i18n.off("languageChanged", sync);
+  }, []);
+
   return <I18nextProvider i18n={i18n}>{children}</I18nextProvider>;
 }

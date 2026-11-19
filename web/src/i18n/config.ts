@@ -14,12 +14,16 @@ export const LANGS = [
 
 export type LangCode = (typeof LANGS)[number]["code"];
 
-export const DEFAULT_LANG: LangCode = "zh-CN";
 export const LANG_STORAGE_KEY = "antifox-lang";
 
 export function isLangCode(v: string | null | undefined): v is LangCode {
   return !!v && LANGS.some((l) => l.code === v);
 }
+
+// Default UI language for users who have not picked one yet. Build-time setting (static export):
+// NEXT_PUBLIC_DEFAULT_LANG=en-US npm run build:static. Unset or unknown → zh-CN.
+const ENV_DEFAULT_LANG = process.env.NEXT_PUBLIC_DEFAULT_LANG;
+export const DEFAULT_LANG: LangCode = isLangCode(ENV_DEFAULT_LANG) ? ENV_DEFAULT_LANG : "zh-CN";
 
 // 资源直接打包（非异步加载）——静态导出友好、无 Suspense、SSR/首帧一致。
 if (!i18n.isInitialized) {

@@ -1611,7 +1611,8 @@
     "goalEditHint": "Changing the goal steers subsequent planning (no automatic re-decompose — pair with \"Continue running\" to act on it).",
     "saved": "Task updated",
     "saveFailed": "Update failed: {{msg}}",
-    "opFailed": "Operation failed: {{msg}}"
+    "opFailed": "Operation failed: {{msg}}",
+    "unnamed": "Unnamed task"
   },
   "findings": {
     "stat": {
@@ -1944,5 +1945,13 @@
     "format": "Format",
     "formatDocx": "Word (.docx)",
     "formatMd": "Markdown bundle (.zip: md+images)"
+  },
+  "search": {
+    "button": "Search",
+    "placeholder": "Search pages…",
+    "empty": "No results found."
+  },
+  "meta": {
+    "title": "AntiFox — Autonomous Penetration Testing Console"
   }
 }
