@@ -91,7 +91,7 @@ func (d *DB) GetKnowledgeConfig() (*KnowledgeConfig, error) {
 // SaveKnowledgeConfig upserts the embedder config. Empty apiKey keeps the existing key.
 // ErrKnowledgeKeyRequired 表示「改了嵌入服务地址但没重输 API Key」——拒绝沿用旧密钥，
 // 防止 operator 把已有密钥转发到其控制的接收器。
-var ErrKnowledgeKeyRequired = errors.New("修改嵌入服务地址时需要重新输入 API Key")
+var ErrKnowledgeKeyRequired = errors.New("the API key must be re-entered when changing the embedding service URL")
 
 // SaveKnowledgeConfig upserts the embedder config. 空 apiKey 仅在地址未变时沿用旧密钥；
 // 改了地址却留空密钥则返回 ErrKnowledgeKeyRequired（凭据必须重新输入并绑定新目标）。

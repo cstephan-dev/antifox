@@ -41,11 +41,11 @@ for (const f of files) {
   }
 }
 
-console.log(`扫描 ${files.length} 文件，${refCount} 处 t() 引用。`);
+console.log(`Scanned ${files.length} files, ${refCount} t() references.`);
 if (missing.size === 0) {
-  console.log("✓ 所有 t() 键在 zh-CN.json 中都存在。");
+  console.log("✓ All t() keys exist in zh-CN.json.");
 } else {
-  console.log(`✗ ${missing.size} 个键在 zh-CN.json 缺失：`);
+  console.log(`✗ ${missing.size} keys missing from zh-CN.json:`);
   for (const [k, fs] of missing) console.log(`  ${k}  ← ${[...fs].join(", ")}`);
 }
 
@@ -64,7 +64,7 @@ for (const f of files) {
   if (n > 0) residual.push([f.replace(SRC, ""), n]);
 }
 residual.sort((a, b) => b[1] - a[1]);
-console.log(`\n残留含中文（非注释、非 mock/locale）文件 ${residual.length} 个：`);
+console.log(`\nFiles still containing Chinese (excluding comments, mock and locale files): ${residual.length}`);
 for (const [f, n] of residual) console.log(`  ${String(n).padStart(4)}  ${f}`);
 
 process.exit(missing.size === 0 ? 0 : 1);

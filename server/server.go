@@ -236,7 +236,7 @@ func New(ctx context.Context, m *Manager, skillDir string, dataDir string) *Serv
 		// clear stale 'running' intents from a prior crash/restart (no live worker
 		// owns them) so they re-claim instead of spinning forever in the UI.
 		if n, _ := t.Store.ResetRunningIntents(); n > 0 {
-			log.Printf("[engine] task %s 重置 %d 个残留 running 意图为 open", t.ID, n)
+			log.Printf("[engine] task %s: reset %d stale running intents to open", t.ID, n)
 		}
 		if t.Paused {
 			s.engine.Pause(t.ID)
@@ -975,12 +975,12 @@ func (s *Server) editTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if strings.TrimSpace(req.Description) == "" {
-		writeErr(w, 400, "描述不能为空")
+		writeErr(w, 400, "description cannot be empty")
 		return
 	}
 	if req.LLMProfileID != nil {
 		if _, ok := s.loadProfileConfig(*req.LLMProfileID); !ok {
-			writeErr(w, 400, "所选 LLM 配置不存在或未设置 API Key")
+			writeErr(w, 400, "the selected LLM profile does not exist or has no API key set")
 			return
 		}
 	}
@@ -988,7 +988,7 @@ func (s *Server) editTask(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 500, err.Error())
 		return
 	}
-	log.Printf("[task] #%s 已编辑", t.ID)
+	log.Printf("[task] #%s edited", t.ID)
 	writeJSON(w, 200, map[string]any{"id": t.ID, "ok": true})
 }
 
@@ -1018,7 +1018,7 @@ func (s *Server) control(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		s.engine.Rerun(s.ctx, t)
-		log.Printf("[task] #%s 继续运行(重跑)", t.ID)
+		log.Printf("[task] #%s resumed (rerun)", t.ID)
 		writeJSON(w, 200, map[string]any{"id": t.ID, "paused": false, "status": "running"})
 		return
 	default:
@@ -1030,7 +1030,7 @@ func (s *Server) control(w http.ResponseWriter, r *http.Request) {
 	if err := s.m.SetTaskPaused(t.ID, paused); err != nil { // persist (survives restart)
 		log.Printf("[control] persist paused %s: %v", t.ID, err)
 	}
-	log.Printf("[task] #%s %s", t.ID, map[bool]string{true: "已暂停", false: "已恢复"}[paused])
+	log.Printf("[task] #%s %s", t.ID, map[bool]string{true: "paused", false: "resumed"}[paused])
 	writeJSON(w, 200, map[string]any{"id": t.ID, "paused": paused})
 }
 
@@ -1139,7 +1139,7 @@ func (s *Server) testLLM(w http.ResponseWriter, r *http.Request) {
 		s.cfgMu.Unlock()
 	}
 	if cfg.APIKey == "" {
-		writeJSON(w, 200, map[string]any{"ok": false, "error": "未提供 API Key"})
+		writeJSON(w, 200, map[string]any{"ok": false, "error": "no API key provided"})
 		return
 	}
 	lat, err := agent.TestConnection(r.Context(), cfg)
@@ -1166,13 +1166,13 @@ func (s *Server) createTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if strings.TrimSpace(req.Description) == "" {
-		req.Description = "未命名任务"
+		req.Description = "Untitled task"
 	}
 	// validate the pinned profile up front (must exist + be usable), so a bad id fails
 	// task creation instead of silently falling back to the active profile at run time.
 	if req.LLMProfileID != nil {
 		if _, ok := s.loadProfileConfig(*req.LLMProfileID); !ok {
-			writeErr(w, 400, "所选 LLM 配置不存在或未设置 API Key")
+			writeErr(w, 400, "the selected LLM profile does not exist or has no API key set")
 			return
 		}
 	}
@@ -1184,7 +1184,7 @@ func (s *Server) createTask(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 500, err.Error())
 		return
 	}
-	log.Printf("[task] 新建任务 #%s «%s» 目标: %s", t.ID, req.Description, req.Goal)
+	log.Printf("[task] created task #%s «%s» goal: %s", t.ID, req.Description, req.Goal)
 	// seed initial asset(s) from goal/description so the event-driven loop has a root.
 	s.seed(t, req.Description+" "+req.Goal)
 	// Return immediately — goal decomposition is async so the UI isn't blocked.
@@ -1194,7 +1194,7 @@ func (s *Server) createTask(w http.ResponseWriter, r *http.Request) {
 	// fires before any goal nodes exist.
 	go func() {
 		s.engine.emitActivity(t, db.Activity{Worker: "planner", Kind: "round",
-			Summary: "第 0 轮目标拆解"})
+			Summary: "Round 0 goal decomposition"})
 		goals := s.createGoals(s.ctx, t, func(r db.Activity) {
 			s.engine.emitActivity(t, r)
 		})
@@ -1279,13 +1279,13 @@ func (s *Server) llmHost() string {
 func (s *Server) seed(t *Task, text string) {
 	scheme, host, port, ok := parseTarget(text)
 	if !ok {
-		log.Printf("[seed] task %s: 未能从 %q 解析出目标 host/IP，不创建站点（请手动配置 scope）", t.ID, text)
+		log.Printf("[seed] task %s: could not parse a target host/IP from %q; no site created (configure the scope manually)", t.ID, text)
 		t.Notify()
 		return
 	}
 	// P0-1 guard: never treat the configured LLM gateway as a target.
 	if gw := s.llmHost(); gw != "" && host == gw {
-		log.Printf("[seed] task %s: 目标 %q 是 LLM 网关，拒绝作为渗透目标", t.ID, host)
+		log.Printf("[seed] task %s: target %q is an LLM gateway; refusing it as a pentest target", t.ID, host)
 		t.Notify()
 		return
 	}
@@ -1311,7 +1311,7 @@ func (s *Server) seed(t *Task, text string) {
 			_ = t.Store.Anchor(begin, rootID)
 		}
 	}
-	log.Printf("[seed] task %s: 目标站点 %s", t.ID, u)
+	log.Printf("[seed] task %s: target site %s", t.ID, u)
 	t.Notify()
 }
 
@@ -1853,7 +1853,7 @@ func (s *Server) settingsPayload() map[string]any {
 func (s *Server) pgDetectPython(w http.ResponseWriter, r *http.Request) {
 	p := detectPython()
 	if p == "" {
-		writeErr(w, 404, "未检测到 python(python3/python 均不在 PATH)")
+		writeErr(w, 404, "python not detected (neither python3 nor python is in PATH)")
 		return
 	}
 	if err := s.m.pg.SetSetting(settingPythonInterp, p); err != nil {
@@ -1969,12 +1969,12 @@ func (s *Server) testGlobalProxy(w http.ResponseWriter, r *http.Request) {
 		raw = s.m.GlobalProxy()
 	}
 	if raw == "" {
-		writeJSON(w, 200, map[string]any{"ok": false, "error": "未配置代理"})
+		writeJSON(w, 200, map[string]any{"ok": false, "error": "no proxy configured"})
 		return
 	}
 	u, err := url.Parse(raw)
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https" && u.Scheme != "socks5") {
-		writeJSON(w, 200, map[string]any{"ok": false, "error": "代理地址非法（需 http/https/socks5）"})
+		writeJSON(w, 200, map[string]any{"ok": false, "error": "invalid proxy address (must be http/https/socks5)"})
 		return
 	}
 	tr := http.DefaultTransport.(*http.Transport).Clone()
@@ -2000,7 +2000,7 @@ func (s *Server) testGlobalProxy(w http.ResponseWriter, r *http.Request) {
 		}
 		ip := strings.TrimSpace(string(raw))
 		if net.ParseIP(ip) == nil {
-			lastErr = "返回非 IP 响应"
+			lastErr = "response is not an IP address"
 			continue
 		}
 		writeJSON(w, 200, map[string]any{
@@ -2011,7 +2011,7 @@ func (s *Server) testGlobalProxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if lastErr == "" {
-		lastErr = "无可用检测节点"
+		lastErr = "no check endpoint available"
 	}
 	writeJSON(w, 200, map[string]any{"ok": false, "error": lastErr})
 }
@@ -2053,7 +2053,7 @@ func (s *Server) testWebSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(results) == 0 {
-		writeJSON(w, 200, map[string]any{"ok": false, "error": "搜索返回 0 条结果（可能被限流或代理不通）", "backend": backend})
+		writeJSON(w, 200, map[string]any{"ok": false, "error": "search returned 0 results (possibly rate-limited or the proxy is unreachable)", "backend": backend})
 		return
 	}
 	writeJSON(w, 200, map[string]any{"ok": true, "count": len(results), "backend": backend})
@@ -2126,7 +2126,7 @@ func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
 			emit := func(rec db.Activity) { s.engine.emitActivity(t, rec) }
 			maTaskID, _ := strconv.ParseInt(t.ID, 10, 64)
 			if _, err := ma.Chat(ctx, maTaskID, s.m.Assets(), t.Store, t.Goal, req.Message, emit, t.Notify); err != nil && ctx.Err() == nil {
-				s.engine.emitActivity(t, db.Activity{Worker: "mainagent", Kind: "text", IsError: true, Summary: "（主 Agent 出错：" + err.Error() + "）"})
+				s.engine.emitActivity(t, db.Activity{Worker: "mainagent", Kind: "text", IsError: true, Summary: "(Main agent error: " + err.Error() + ")"})
 			}
 		}()
 		writeJSON(w, 202, map[string]any{"status": "accepted", "mode": "llm"})
@@ -2165,11 +2165,11 @@ func (s *Server) fallbackChat(t *Task, msg string) string {
 	case strings.HasPrefix(m, "意图") || strings.HasPrefix(lower, "intent"):
 		text := strings.TrimSpace(strings.TrimPrefix(strings.TrimPrefix(m, "意图"), "intent"))
 		_, _ = t.Store.AddIntent(map[string]any{"summary": text}, 9, nil, "human")
-		return "已注入一条高优先级意图：" + text
+		return "Injected a high-priority intent: " + text
 	case strings.HasPrefix(m, "提示") || strings.HasPrefix(lower, "hint"):
 		text := strings.TrimSpace(strings.TrimPrefix(strings.TrimPrefix(m, "提示"), "hint"))
 		_, _ = t.Store.AddNode(db.KindHint, map[string]any{"text": text}, 0, "active", "human", nil)
-		return "已记录提示，规划者下次会读到：" + text
+		return "Hint recorded; the planner will read it next time: " + text
 	default:
 		assetCounts, _ := s.m.Assets().CountsByType()
 		assets := 0
@@ -2178,7 +2178,7 @@ func (s *Server) fallbackChat(t *Task, msg string) string {
 		}
 		fnd, _ := t.Store.ListByKind(db.KindFinding, 1000)
 		fr, _ := t.Store.Frontier(1000)
-		return fmt.Sprintf("（规则模式，未配置 LLM）当前态势：资产 %d，待领意图 %d，确认发现 %d。\n可用指令：以\"意图 ...\"注入意图，\"提示 ...\"给规划者提示。", assets, len(fr), len(fnd))
+		return fmt.Sprintf("(Rule mode, no LLM configured) Current status: %d assets, %d open intents, %d confirmed findings.\nAvailable commands: \"intent ...\" injects an intent, \"hint ...\" gives the planner a hint.", assets, len(fr), len(fnd))
 	}
 }
 

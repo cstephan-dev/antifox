@@ -4,16 +4,16 @@
 // stable ids (agent key, role id, permission key, MCP name), so every page shows them in the selected language.
 //
 // Only built-in values are translated. MCP descriptions and the admin's display name are user-editable: they are
-// translated only while they still equal the seeded (zh-CN) text, so an edited value is always shown as written.
+// translated only while they still equal the seeded (zh-CN or en-US) text, so an edited value is always shown as written.
 // Data loaded before a language switch keeps its language until the page fetches it again.
 import i18n from "@/i18n/config";
 import type { Agent, MCPServer, PromptVar, RBACRole, RBACUser } from "@/lib/types";
 
 const has = (key: string) => i18n.exists(key);
 const tr = (key: string, fallback: string) => (has(key) ? i18n.t(key) : fallback);
-// the seeded text is the zh-CN translation of the key
+// seeded text = the key's zh-CN translation (databases seeded by upstream) or en-US translation (seeded by this fork)
 const isSeeded = (key: string, value: string | undefined) =>
-  !!value && has(key) && i18n.t(key, { lng: "zh-CN" }) === value;
+  !!value && has(key) && (i18n.t(key, { lng: "zh-CN" }) === value || i18n.t(key, { lng: "en-US" }) === value);
 
 export function trAgent<T extends Pick<Agent, "key" | "name" | "description" | "builtin">>(a: T): T {
   if (!a?.builtin) return a;

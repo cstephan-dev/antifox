@@ -530,14 +530,16 @@ func reproToBlocks(raw json.RawMessage, loc string, evByStep map[int][]procBlock
 		lStep := pick(loc, "步骤", "步驟", "Step")
 		lExp := pick(loc, "预期", "預期", "Expected")
 		lProves := pick(loc, "证明", "證明", "Proves")
+		sepColon := pick(loc, "：", "：", ": ")
+		sepBar := pick(loc, "｜", "｜", " | ")
 		for i, st := range r.Steps {
 			var sb strings.Builder
 			sb.WriteString(fmt.Sprintf("%s %d", lStep, i+1))
 			if strings.TrimSpace(st.Expected) != "" {
-				sb.WriteString(" — " + lExp + "：" + strings.TrimSpace(st.Expected))
+				sb.WriteString(" — " + lExp + sepColon + strings.TrimSpace(st.Expected))
 			}
 			if strings.TrimSpace(st.Proves) != "" {
-				sb.WriteString("｜" + lProves + "：" + strings.TrimSpace(st.Proves))
+				sb.WriteString(sepBar + lProves + sepColon + strings.TrimSpace(st.Proves))
 			}
 			addText(sb.String())
 			addCode(st.Request)

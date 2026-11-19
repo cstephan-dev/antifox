@@ -39,13 +39,13 @@ for (const f of readdirSync(FRAG_DIR).filter((f) => f.endsWith(".json")).sort())
   const frag = JSON.parse(readFileSync(`${FRAG_DIR}/${f}`, "utf8"));
   for (const ns of Object.keys(frag)) {
     if (seen.has(ns)) {
-      console.warn(`⚠️  命名空间重复: ${ns}（来自 ${f}）— 后者覆盖前者`);
+      console.warn(`⚠️  Duplicate namespace: ${ns} (from ${f}) — the later one overrides the earlier one`);
     }
     seen.add(ns);
     for (const l of LANGS) {
       const sub = frag[ns]?.[l];
       if (!sub) {
-        console.warn(`⚠️  ${f} 的 ${ns} 缺 ${l}`);
+        console.warn(`⚠️  ${f}: ${ns} is missing ${l}`);
         continue;
       }
       locales[l][ns] = decodeEntities(sub);
@@ -57,4 +57,4 @@ for (const f of readdirSync(FRAG_DIR).filter((f) => f.endsWith(".json")).sort())
 for (const l of LANGS) {
   writeFileSync(new URL(`${l}.json`, LOCALE_DIR), JSON.stringify(locales[l], null, 2) + "\n");
 }
-console.log(`✓ 合并 ${nsCount} 个命名空间进 ${LANGS.length} 份 locale：${[...seen].join(", ")}`);
+console.log(`✓ Merged ${nsCount} namespaces into ${LANGS.length} locales: ${[...seen].join(", ")}`);

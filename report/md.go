@@ -23,14 +23,16 @@ func BuildMarkdown(ctx context.Context, pg *db.DB, in *GenInput) (string, map[st
 	doc := BuildDoc(ctx, pg, in)
 	loc := doc.Meta.Locale
 	L := func(zh, tw, en string) string { return pick(loc, zh, tw, en) }
+	colon := L("：", "：", ": ")
+	paren := func(s string) string { return L("（"+s+"）", "（"+s+"）", " ("+s+")") }
 	assets := map[string]string{}
 	var b strings.Builder
 
 	// ── 信息头 ──
 	b.WriteString("# " + doc.Meta.ReportTitle + "\n\n")
-	b.WriteString("> **" + L("出具方", "出具方", "Prepared by") + "**：" + doc.Meta.CompanyName + "  \n")
-	b.WriteString("> **" + L("报告日期", "報告日期", "Date") + "**：" + doc.Meta.Date +
-		"　·　**" + L("版本", "版本", "Version") + "**：" + doc.Meta.Version + "  \n")
+	b.WriteString("> **" + L("出具方", "出具方", "Prepared by") + "**" + colon + doc.Meta.CompanyName + "  \n")
+	b.WriteString("> **" + L("报告日期", "報告日期", "Date") + "**" + colon + doc.Meta.Date +
+		L("　·　", "　·　", " · ") + "**" + L("版本", "版本", "Version") + "**" + colon + doc.Meta.Version + "  \n")
 	var crit, high, med, low int
 	for _, s := range doc.Summary.Systems {
 		crit += s.Crit
@@ -38,11 +40,11 @@ func BuildMarkdown(ctx context.Context, pg *db.DB, in *GenInput) (string, map[st
 		med += s.Med
 		low += s.Low
 	}
-	b.WriteString("> **" + L("漏洞统计", "漏洞統計", "Findings") + "**：" +
-		fmt.Sprintf("%s %d · %s %d · %s %d · %s %d（%s %d）\n",
+	b.WriteString("> **" + L("漏洞统计", "漏洞統計", "Findings") + "**" + colon +
+		fmt.Sprintf("%s %d · %s %d · %s %d · %s %d%s\n",
 			L("严重", "嚴重", "Critical"), crit, L("高危", "高危", "High"), high,
 			L("中危", "中危", "Medium"), med, L("低危", "低危", "Low"), low,
-			L("共", "共", "total"), crit+high+med+low))
+			paren(fmt.Sprintf("%s %d", L("共", "共", "total"), crit+high+med+low))))
 	b.WriteString("\n---\n\n")
 
 	s1 := L("漏洞描述", "漏洞描述", "Description")
@@ -63,11 +65,11 @@ func BuildMarkdown(ctx context.Context, pg *db.DB, in *GenInput) (string, map[st
 		for _, v := range sysd.Vulns {
 			vulnIdx++
 			// 标题：<sys>.<vuln> <name>（<severity>/CVSS分值<score>）——自成 1 起编号
-			paren := v.Severity
+			sevCVSS := v.Severity
 			if v.CVSSScore > 0 {
-				paren += "/" + L("CVSS分值", "CVSS分值", "CVSS ") + fmt.Sprintf("%.1f", v.CVSSScore)
+				sevCVSS += "/" + L("CVSS分值", "CVSS分值", "CVSS ") + fmt.Sprintf("%.1f", v.CVSSScore)
 			}
-			b.WriteString(fmt.Sprintf("### %d.%d %s（%s）\n\n", sysIdx, vulnIdx, v.Title, paren))
+			b.WriteString(fmt.Sprintf("### %d.%d %s%s\n\n", sysIdx, vulnIdx, v.Title, paren(sevCVSS)))
 			// 属性表
 			b.WriteString("| | |\n|---|---|\n")
 			b.WriteString("| **" + tTarget + "** | " + mdCell(nz(v.Target, v.URL)) + " |\n")
@@ -132,22 +134,22 @@ func BuildMarkdown(ctx context.Context, pg *db.DB, in *GenInput) (string, map[st
 // 纯 Go、无 python 依赖；图片以真实文件随附、相对引用，解压后在 Typora/VSCode 直接可读可编辑。
 func GenerateMarkdownFile(ctx context.Context, pg *db.DB, in *GenInput, workDir, taskID string) (string, error) {
 	if err := os.MkdirAll(workDir, 0o755); err != nil {
-		return "", fmt.Errorf("创建报告目录失败: %w", err)
+		return "", fmt.Errorf("failed to create report directory: %w", err)
 	}
 	md, assets := BuildMarkdown(ctx, pg, in)
 	zipPath := filepath.Join(workDir, fmt.Sprintf("task-%s-%s.zip", safeName(taskID), nowStamp(ctx)))
 	zf, err := os.Create(zipPath)
 	if err != nil {
-		return "", fmt.Errorf("创建报告包失败: %w", err)
+		return "", fmt.Errorf("failed to create report package: %w", err)
 	}
 	defer zf.Close()
 	zw := zip.NewWriter(zf)
 	mw, err := zw.Create("report.md")
 	if err != nil {
-		return "", fmt.Errorf("写入 report.md 失败: %w", err)
+		return "", fmt.Errorf("failed to write report.md: %w", err)
 	}
 	if _, err := mw.Write([]byte(md)); err != nil {
-		return "", fmt.Errorf("写入 report.md 失败: %w", err)
+		return "", fmt.Errorf("failed to write report.md: %w", err)
 	}
 	for rel, src := range assets {
 		data, err := os.ReadFile(src)
@@ -161,7 +163,7 @@ func GenerateMarkdownFile(ctx context.Context, pg *db.DB, in *GenInput, workDir,
 		_, _ = aw.Write(data)
 	}
 	if err := zw.Close(); err != nil {
-		return "", fmt.Errorf("打包失败: %w", err)
+		return "", fmt.Errorf("packaging failed: %w", err)
 	}
 	return zipPath, nil
 }
