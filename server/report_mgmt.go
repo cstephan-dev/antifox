@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"antifox/db"
+	"antifox/report"
 )
 
 // GET /api/report-settings
@@ -116,14 +117,16 @@ func (s *Server) seedDemoReportTemplate() {
 			{"name": "Alex Zhang", "role": "Project Lead / Security Engineer", "contact": ""},
 			{"name": "Sam Li", "role": "Red Team Assessment", "contact": ""},
 		})
-		_, _ = s.m.pg.AddReportTemplate(&db.ReportTemplate{
-			Name:          "Standard Chinese-language delivery (example)",
-			CompanyName:   "示例安全服务团队",
-			CompanyNameEn: "Example Security Team",
-			Personnel:     pj,
-			CVSSVersion:   "3.1",
-			Locale:        "zh-CN",
-		})
+		// demo template in the deployment's default language (ANTIFOX_DEFAULT_LOCALE)
+		tmpl := &db.ReportTemplate{Name: "Standard Chinese-language delivery (example)", CompanyName: "示例安全服务团队",
+			CompanyNameEn: "Example Security Team", Personnel: pj, CVSSVersion: "3.1", Locale: "zh-CN"}
+		switch report.DefaultLocale() {
+		case "en-US":
+			tmpl.Name, tmpl.CompanyName, tmpl.Locale = "Standard English delivery (example)", "Example Security Team", "en-US"
+		case "zh-TW":
+			tmpl.Name, tmpl.CompanyName, tmpl.Locale = "Standard Traditional Chinese delivery (example)", "示例安全服務團隊", "zh-TW"
+		}
+		_, _ = s.m.pg.AddReportTemplate(tmpl)
 	}
 	_ = os.MkdirAll(s.dataDir, 0o755)
 	_ = os.WriteFile(marker, []byte("1"), 0o644)

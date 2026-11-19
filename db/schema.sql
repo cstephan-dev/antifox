@@ -680,6 +680,8 @@ CREATE TABLE IF NOT EXISTS finding_enrichment (
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_finding_enrichment_status ON finding_enrichment(status);
+-- language the AI prose was generated in; reports reuse it only in the same language (older rows: zh-CN)
+ALTER TABLE finding_enrichment ADD COLUMN IF NOT EXISTS locale TEXT NOT NULL DEFAULT 'zh-CN';
 
 -- §P2 漏洞证据截图：按 exploration 节点 id 关联，文件存 dataDir/report_assets/evidence/<node_id>/。
 -- 发现页展示 + 报告(DOCX/MD)复现步骤内嵌共用；step_index 对应复现步骤序号(0=概览)。

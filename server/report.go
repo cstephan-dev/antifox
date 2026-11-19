@@ -160,9 +160,9 @@ func (s *Server) buildReportInput(t *Task, q map[string][]string) *report.GenInp
 	if locale == "" && tmpl != nil {
 		locale = tmpl.Locale
 	}
-	// Only reuse the persisted (Chinese) enrichment for zh-CN reports; for zh-TW/
-	// en-US we regenerate per-finding so the whole report is in the target language.
-	reuseEnrichment := locale == "" || strings.EqualFold(locale, "zh-CN")
+	// Reuse persisted enrichment only when it was generated in the report's language; otherwise
+	// regenerate per finding so the whole report is in the target language.
+	reportLocale := report.NormLocale(locale)
 	// Optional subset: ?finding_ids=12,15,18 selects specific findings (node IDs).
 	idFilter := parseInt64Set(get("finding_ids"))
 
@@ -191,7 +191,7 @@ func (s *Server) buildReportInput(t *Task, q map[string][]string) *report.GenInp
 		// Reuse persisted enrichment (from the findings page "AI 分析") so the report
 		// is consistent with what the user reviewed and skips a redundant LLM call.
 		if enr, _ := s.m.pg.GetFindingEnrichment(n.ID); enr != nil {
-			if reuseEnrichment {
+			if report.NormLocale(enr.Locale) == reportLocale {
 				fi.Enrichment = reportEnrichmentFromDB(enr)
 			}
 			if strings.TrimSpace(enr.Severity) != "" {
@@ -259,7 +259,7 @@ func (s *Server) buildReportInput(t *Task, q map[string][]string) *report.GenInp
 
 		ReportTitle:   get("title"), // empty → BuildDoc applies locale-aware "<project> <报告词>"
 		Version:       defaultStrSrv(get("version"), "V1.0"),
-		Locale:        defaultStrSrv(locale, "zh-CN"),
+		Locale:        reportLocale,
 		CVSSVersion:   cvss,
 		LogoPath:      logoPath,
 		Personnel:     personnel,

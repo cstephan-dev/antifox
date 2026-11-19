@@ -389,6 +389,7 @@ func (s *Server) seedOrchestrationTools() {
 		_ = s.m.PG().SeedTool(t.Name(), t.Description(), schema, autoAgents)
 	}
 	s.refreshBuiltinToolSchemas()
+	s.migrateEnglishSeeds() // inmind fork: untouched upstream seeds → English (english_seeds.go)
 	s.refreshReportFindingSchema() // 新增 reproduction 结构化复现过程参数 → 推到旧库,否则 agent 看不到
 	s.seedAutoDefaultBindings()
 	s.seedPlannerDefaultBindings()

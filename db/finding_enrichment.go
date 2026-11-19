@@ -26,6 +26,7 @@ type FindingEnrichment struct {
 	RiskAnalysis json.RawMessage `json:"risk_analysis"`
 	Remediation  json.RawMessage `json:"remediation"`
 	Source       string          `json:"source"` // ai | manual
+	Locale       string          `json:"locale"` // language of the AI prose (zh-CN | zh-TW | en-US)
 	CreatedAt    time.Time       `json:"created_at"`
 	UpdatedAt    time.Time       `json:"updated_at"`
 }
@@ -45,13 +46,13 @@ func strOr(s, def string) string {
 
 const feSelect = `SELECT node_id, name, target, module, severity, status, cvss_score, cvss_vector,
 	cvss_metrics::text, description::text, test_process::text, risk_analysis::text, remediation::text,
-	source, created_at, updated_at FROM finding_enrichment`
+	source, locale, created_at, updated_at FROM finding_enrichment`
 
 func scanFE(sc interface{ Scan(...any) error }) (*FindingEnrichment, error) {
 	e := &FindingEnrichment{}
 	var cvss, desc, tp, risk, rem string
 	if err := sc.Scan(&e.NodeID, &e.Name, &e.Target, &e.Module, &e.Severity, &e.Status,
-		&e.CVSSScore, &e.CVSSVector, &cvss, &desc, &tp, &risk, &rem, &e.Source, &e.CreatedAt, &e.UpdatedAt); err != nil {
+		&e.CVSSScore, &e.CVSSVector, &cvss, &desc, &tp, &risk, &rem, &e.Source, &e.Locale, &e.CreatedAt, &e.UpdatedAt); err != nil {
 		return nil, err
 	}
 	e.CVSSMetrics, e.Description = json.RawMessage(cvss), json.RawMessage(desc)
@@ -89,16 +90,16 @@ func (d *DB) GetFindingEnrichments(nodeIDs []int64) (map[int64]*FindingEnrichmen
 func (d *DB) UpsertFindingEnrichment(e *FindingEnrichment) error {
 	_, err := d.Exec(`INSERT INTO finding_enrichment
 		(node_id, name, target, module, severity, status, cvss_score, cvss_vector,
-		 cvss_metrics, description, test_process, risk_analysis, remediation, source, updated_at)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11::jsonb,$12::jsonb,$13::jsonb,$14, now())
+		 cvss_metrics, description, test_process, risk_analysis, remediation, source, locale, updated_at)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11::jsonb,$12::jsonb,$13::jsonb,$14,$15, now())
 		ON CONFLICT (node_id) DO UPDATE SET name=EXCLUDED.name, target=EXCLUDED.target, module=EXCLUDED.module,
 			severity=EXCLUDED.severity, status=EXCLUDED.status, cvss_score=EXCLUDED.cvss_score,
 			cvss_vector=EXCLUDED.cvss_vector, cvss_metrics=EXCLUDED.cvss_metrics, description=EXCLUDED.description,
 			test_process=EXCLUDED.test_process, risk_analysis=EXCLUDED.risk_analysis, remediation=EXCLUDED.remediation,
-			source=EXCLUDED.source, updated_at=now()`,
+			source=EXCLUDED.source, locale=EXCLUDED.locale, updated_at=now()`,
 		e.NodeID, e.Name, e.Target, e.Module, e.Severity, strOr(e.Status, "open"), e.CVSSScore, e.CVSSVector,
 		rawOr(e.CVSSMetrics, "{}"), rawOr(e.Description, "[]"), rawOr(e.TestProcess, "[]"),
-		rawOr(e.RiskAnalysis, "[]"), rawOr(e.Remediation, "[]"), strOr(e.Source, "ai"))
+		rawOr(e.RiskAnalysis, "[]"), rawOr(e.Remediation, "[]"), strOr(e.Source, "ai"), strOr(e.Locale, "zh-CN"))
 	return err
 }
 

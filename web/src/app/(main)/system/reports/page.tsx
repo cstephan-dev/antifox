@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import i18n, { DEFAULT_LANG } from "@/i18n/config";
 import { api } from "@/lib/api";
 import type { Finding, Personnel, ReportRecord, ReportSettings, ReportTemplate, Task } from "@/lib/types";
 import { taskLabel, taskMap } from "@/lib/task-label";
@@ -43,7 +44,7 @@ function emptyTemplate(): ReportTemplate {
     logo_path: "",
     personnel: [],
     cvss_version: "3.1",
-    locale: "zh-CN",
+    locale: DEFAULT_LANG,
   };
 }
 
@@ -58,7 +59,7 @@ function fmtSize(n: number): string {
   return `${(n / 1024 / 1024).toFixed(1)} MB`;
 }
 function fmtTime(ts: string) {
-  return new Date(ts).toLocaleString("zh-CN");
+  return new Date(ts).toLocaleString(i18n.language);
 }
 
 export default function ReportsPage() {
@@ -81,7 +82,7 @@ export default function ReportsPage() {
   const [selTask, setSelTask] = React.useState("");
   const [title, setTitle] = React.useState("");
   const [client, setClient] = React.useState("");
-  const [locale, setLocale] = React.useState("zh-CN");
+  const [locale, setLocale] = React.useState<string>(DEFAULT_LANG);
   const [format, setFormat] = React.useState("docx"); // docx | md
   const [taskFindings, setTaskFindings] = React.useState<Finding[]>([]);
   const [selFindings, setSelFindings] = React.useState<Set<string>>(new Set());
@@ -187,7 +188,7 @@ export default function ReportsPage() {
     setSelTask("");
     setTitle("");
     setClient("");
-    setLocale("zh-CN");
+    setLocale(DEFAULT_LANG);
     setSelTemplate("");
     setTaskFindings([]);
     setSelFindings(new Set());

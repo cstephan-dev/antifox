@@ -353,6 +353,7 @@ func (s *Server) runEnrich(id int64, f *db.DBFinding, locale, company string) {
 		return
 	}
 	row := dbEnrichmentFromReport(id, enr)
+	row.Locale = report.NormLocale(locale) // reports reuse this prose only in the same language
 	// keep any prior human status if this finding was already triaged
 	if prev, _ := s.m.pg.GetFindingEnrichment(id); prev != nil && prev.Status != "" {
 		row.Status = prev.Status

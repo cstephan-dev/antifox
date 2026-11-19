@@ -8,13 +8,33 @@ package report
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 )
 
 // normLocale canonicalizes a locale string to one of the three supported values.
+// Empty or unknown → DefaultLocale().
 func normLocale(l string) string {
 	switch strings.ToLower(strings.TrimSpace(l)) {
+	case "zh-tw", "zh_tw", "zh-hant", "tw", "hant":
+		return "zh-TW"
+	case "en", "en-us", "en_us", "en-gb":
+		return "en-US"
+	case "zh-cn", "zh_cn", "zh", "zh-hans", "cn", "hans":
+		return "zh-CN"
+	default:
+		return DefaultLocale()
+	}
+}
+
+// NormLocale is normLocale for other packages: zh-CN | zh-TW | en-US.
+func NormLocale(l string) string { return normLocale(l) }
+
+// DefaultLocale is the language of generated content (reports, AI analysis) when a request names none:
+// env ANTIFOX_DEFAULT_LOCALE (zh-CN | zh-TW | en-US), else zh-CN.
+func DefaultLocale() string {
+	switch strings.ToLower(strings.TrimSpace(os.Getenv("ANTIFOX_DEFAULT_LOCALE"))) {
 	case "zh-tw", "zh_tw", "zh-hant", "tw", "hant":
 		return "zh-TW"
 	case "en", "en-us", "en_us", "en-gb":
