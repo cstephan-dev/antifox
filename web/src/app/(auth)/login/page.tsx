@@ -22,16 +22,32 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [sso, setSso] = useState<{ label: string; passwordLogin: boolean } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
+    // OIDC single sign-on returns here with the session token (or an error code) in the URL
+    // fragment, which never reaches a server or its logs. Read it once and remove it.
+    const hash = new URLSearchParams(window.location.hash.slice(1));
+    const ssoToken = hash.get("sso_token");
+    const ssoError = hash.get("sso_error");
+    if (ssoToken || ssoError) window.history.replaceState(null, "", window.location.pathname);
+    if (ssoToken) {
+      auth.setToken(ssoToken);
+      router.replace("/function/tasks");
+      return;
+    }
+    if (ssoError) setError(t(`login.ssoErr.${ssoError}`, { defaultValue: t("login.ssoErr.failed") }));
     // 已登录直接进主界面（静态导出下无 middleware 代劳这层跳转）。
     if (auth.getToken()) {
       router.replace("/function/tasks");
       return;
     }
-    api.authStatus()
-      .then(({ initialized }) => {
+    api
+      .authStatus()
+      .then(({ initialized, oidc }) => {
         if (!initialized) router.replace("/setup");
+        if (oidc?.enabled) setSso({ label: oidc.label || "SSO", passwordLogin: oidc.password_login !== false });
       })
       .catch(() => setError(t("login.errBackend")))
       .finally(() => setChecking(false));
@@ -70,7 +86,8 @@ export default function LoginPage() {
           <AntifoxLogo className="size-24 drop-shadow-xl" />
           <div className="space-y-1.5">
             <div className="text-4xl font-bold tracking-tight">
-              Anti<span className="bg-gradient-to-r from-[#4F6BF6] to-[#7C3AED] bg-clip-text text-transparent">Fox</span>
+              Anti
+              <span className="bg-gradient-to-r from-[#4F6BF6] to-[#7C3AED] bg-clip-text text-transparent">Fox</span>
             </div>
             <div className="text-xs font-medium uppercase tracking-[0.25em] text-white/70">
               AI Autonomous Pentest Platform
@@ -86,34 +103,53 @@ export default function LoginPage() {
             <h2 className="text-2xl font-medium tracking-tight">{t("login.title")}</h2>
             <p className="mx-auto max-w-xl text-muted-foreground">{t("login.welcome")}</p>
           </div>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="username">{t("login.username")}</Label>
-              <Input
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder={t("login.usernamePlaceholder")}
-                autoFocus
-                autoComplete="username"
-              />
+          {sso && (
+            <div className="flex flex-col gap-3">
+              <Button type="button" className="w-full" onClick={() => window.location.assign("/api/auth/oidc/start")}>
+                {t("login.ssoButton", { label: sso.label })}
+              </Button>
+              {!showPassword && (
+                <button
+                  type="button"
+                  className="text-center text-muted-foreground text-sm underline-offset-4 hover:underline"
+                  onClick={() => setShowPassword(true)}
+                >
+                  {sso.passwordLogin ? t("login.usePassword") : t("login.useLocalAccount")}
+                </button>
+              )}
+              {error && !showPassword && <p className="text-destructive text-sm">{error}</p>}
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="password">{t("login.password")}</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={t("login.passwordPlaceholder")}
-                autoComplete="current-password"
-              />
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading || !password}>
-              {loading ? t("login.submitting") : t("login.submit")}
-            </Button>
-          </form>
+          )}
+          {(!sso || showPassword) && (
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="username">{t("login.username")}</Label>
+                <Input
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder={t("login.usernamePlaceholder")}
+                  autoFocus={!sso}
+                  autoComplete="username"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="password">{t("login.password")}</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={t("login.passwordPlaceholder")}
+                  autoComplete="current-password"
+                />
+              </div>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <Button type="submit" className="w-full" disabled={loading || !password}>
+                {loading ? t("login.submitting") : t("login.submit")}
+              </Button>
+            </form>
+          )}
         </div>
       </div>
     </div>

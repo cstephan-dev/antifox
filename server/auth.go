@@ -51,6 +51,8 @@ func ctxIsAdmin(ctx context.Context) bool {
 type authClaims struct {
 	Username string `json:"usr"`
 	Ver      int    `json:"ver"`
+	Src      string `json:"src,omitempty"`   // "oidc" = OIDC session (see oidc.go); empty = password
+	Since    int64  `json:"since,omitempty"` // OIDC: unix time of the OIDC login (kept across refreshes)
 	jwt.RegisteredClaims
 }
 
@@ -99,15 +101,15 @@ func signJWT(key []byte, userID, username string) (string, error) {
 // signJWTTTL issues an HS256 token that expires after ttl, stamped with the user's
 // current token_version (ver) so a later password change / disable invalidates it.
 func signJWTTTL(key []byte, userID, username string, ver int, ttl time.Duration) (string, error) {
-	return jwt.NewWithClaims(jwt.SigningMethodHS256, authClaims{
-		Username: username,
-		Ver:      ver,
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   userID,
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
-	}).SignedString(key)
+	return signSessionJWT(key, authClaims{Username: username, Ver: ver, RegisteredClaims: jwt.RegisteredClaims{Subject: userID}}, ttl)
+}
+
+// signSessionJWT issues an HS256 session token from c (Subject, Username, Ver, Src, Since), valid for ttl.
+func signSessionJWT(key []byte, c authClaims, ttl time.Duration) (string, error) {
+	now := time.Now()
+	c.ExpiresAt = jwt.NewNumericDate(now.Add(ttl))
+	c.IssuedAt = jwt.NewNumericDate(now)
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, c).SignedString(key)
 }
 
 // parseJWT validates and returns the claims.
@@ -194,8 +196,11 @@ func (s *Server) requireAuth(h http.Handler) http.Handler {
 		// X-Refresh-Token 响应头回传，前端替换存储；空闲超过会话时长则自然过期需重登。
 		if claims.ExpiresAt != nil {
 			ttl := s.sessionTTL()
-			if rem := time.Until(claims.ExpiresAt.Time); rem > 0 && rem < ttl/2 {
-				if fresh, err := signJWTTTL(s.jwtKey, claims.Subject, claims.Username, acc.User.TokenVersion, ttl); err == nil {
+			// OIDC sessions keep Src/Since and never outlive ANTIFOX_OIDC_MAX_SESSION (oidcCapTTL)
+			next := authClaims{Username: claims.Username, Ver: acc.User.TokenVersion, Src: claims.Src, Since: claims.Since,
+				RegisteredClaims: jwt.RegisteredClaims{Subject: claims.Subject}}
+			if rem := time.Until(claims.ExpiresAt.Time); rem > 0 && rem < ttl/2 && s.oidcCapTTL(&next, ttl) > rem {
+				if fresh, err := signSessionJWT(s.jwtKey, next, s.oidcCapTTL(&next, ttl)); err == nil {
 					w.Header().Set("Access-Control-Expose-Headers", "X-Refresh-Token")
 					w.Header().Set("X-Refresh-Token", fresh)
 				}
@@ -242,7 +247,7 @@ func (s *Server) authStatus(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, 500, "查询失败")
 		return
 	}
-	writeJSON(w, 200, map[string]any{"initialized": !needs})
+	writeJSON(w, 200, map[string]any{"initialized": !needs, "oidc": s.oidcStatus()})
 }
 
 // POST /api/auth/init — 首启设管理员密码（建内置 admin）。
@@ -397,6 +402,13 @@ func (s *Server) authLogin(w http.ResponseWriter, r *http.Request) {
 		pg.RecordAudit(u.Username, "auth", "login_failed", "fail", ip, "密码错误", nil)
 		log.Printf("[auth] 登录失败 用户=%q ip=%s 原因=密码错误", u.Username, ip)
 		writeErr(w, 401, "用户名或密码错误")
+		return
+	}
+	// ANTIFOX_OIDC_PASSWORD_LOGIN=false: accounts linked to OIDC sign in through OIDC only. Checked after
+	// the password, so it reveals nothing to someone who does not know it.
+	if s.oidcBlocksPasswordLogin(pg, u) {
+		pg.RecordAudit(u.Username, "auth", "login_failed", "fail", ip, "password login disabled for OIDC accounts", nil)
+		writeErr(w, 403, "This account signs in with SSO")
 		return
 	}
 	tok, err := signJWTTTL(s.jwtKey, u.ID, u.Username, u.TokenVersion, s.sessionTTL())

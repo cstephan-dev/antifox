@@ -115,7 +115,8 @@ const tq = (task?: string, sep: "?" | "&" = "?") => (task ? `${sep}task=${encode
 
 export const api = {
   // ---- auth ----
-  authStatus: () => get<{ initialized: boolean }>("/auth/status"),
+  authStatus: () =>
+    get<{ initialized: boolean; oidc?: { enabled: boolean; label?: string; password_login?: boolean } }>("/auth/status"),
   login: (username: string, password: string) =>
     post<{ token: string; must_change_password?: boolean }>("/auth/login", { username, password }),
   initPassword: (password: string) =>

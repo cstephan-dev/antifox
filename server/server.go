@@ -40,6 +40,7 @@ type Server struct {
 	jwtKey   []byte // HS256 signing key loaded from / generated into dataDir/jwt.key
 
 	loginLimiter *loginLimiter // 登录失败限流/锁定（按 IP + 账号）
+	oidc         *oidcClient   // OIDC single sign-on; nil = disabled (oidc.go)
 
 	// reportJobs tracks async .docx report generation per task (in-memory; reports
 	// are regenerable so a restart simply drops job state). Guarded by reportMu.
@@ -136,6 +137,7 @@ func New(ctx context.Context, m *Manager, skillDir string, dataDir string) *Serv
 		profAgents: map[int64]*profBundle{}, profChatAgents: map[int64]*agent.ChatAgent{}, reportJobs: map[string]*reportJob{},
 		enrichJobs: map[int64]*enrichJob{}, provCache: map[int64]llm.Provider{}}
 	s.loginLimiter = newLoginLimiter()
+	s.oidc = newOIDCClient(loadOIDCConfig(), key)
 	s.llmHealth = newLLMHealthRegistry(m.pg) // process-wide LLM circuit breaker (restores cooling windows)
 	// 多用户 RBAC：首启迁移旧单用户密码为内置 admin + 播种角色/权限（幂等）。
 	s.bootstrapRBAC()
@@ -563,6 +565,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/auth/init", s.authInit)
 	mux.HandleFunc("POST /api/auth/login", s.authLogin)
 	mux.HandleFunc("POST /api/auth/change-password", s.authChangePassword)
+	mux.HandleFunc("GET /api/auth/oidc/start", s.oidcStart)
+	mux.HandleFunc("GET /api/auth/oidc/callback", s.oidcCallback)
 
 	// 平台权限（多用户 RBAC）
 	mux.HandleFunc("GET /api/rbac/me", s.rbacMe)

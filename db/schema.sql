@@ -602,6 +602,16 @@ CREATE TABLE IF NOT EXISTS rbac_users (
 ALTER TABLE rbac_users ADD COLUMN IF NOT EXISTS token_version INT NOT NULL DEFAULT 0;  -- 存量库补列（幂等）
 ALTER TABLE rbac_users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;  -- 存量库补列（幂等）
 
+-- External identities (OIDC single sign-on): issuer + subject -> platform account
+CREATE TABLE IF NOT EXISTS rbac_oidc_identities (
+    issuer     TEXT NOT NULL,
+    subject    TEXT NOT NULL,
+    user_id    TEXT NOT NULL REFERENCES rbac_users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (issuer, subject),
+    UNIQUE (issuer, user_id)
+);
+
 CREATE TABLE IF NOT EXISTS rbac_roles (
     id          TEXT PRIMARY KEY,
     name        TEXT NOT NULL UNIQUE,

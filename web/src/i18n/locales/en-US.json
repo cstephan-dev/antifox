@@ -228,7 +228,21 @@
     "submit": "Sign In",
     "submitting": "Signing in...",
     "errBackend": "Unable to reach the backend service",
-    "errFailed": "Sign-in failed, please try again"
+    "errFailed": "Sign-in failed, please try again",
+    "ssoButton": "Sign in with {{label}}",
+    "usePassword": "Sign in with username and password",
+    "useLocalAccount": "Local account (administrators)",
+    "ssoErr": {
+      "failed": "Single sign-on failed, please try again",
+      "state": "The sign-in took too long or was started in another browser, please try again",
+      "idp": "The identity provider refused the sign-in",
+      "no_role": "Your account has no access to AntiFox. Ask an administrator to add you to an AntiFox group.",
+      "disabled": "This account is disabled",
+      "conflict": "This identity cannot be linked to the existing account. Contact an administrator.",
+      "no_account": "No AntiFox account exists for you. Ask an administrator to create one.",
+      "unavailable": "The identity provider is unreachable, please try again later",
+      "not_initialized": "AntiFox setup has not been completed yet"
+    }
   },
   "setup": {
     "title": "Set Up Password",
