@@ -1611,7 +1611,8 @@
     "goalEditHint": "修改目标会引导后续规划（不会自动重新拆解，请配合「继续运行」使其生效）。",
     "saved": "任务已更新",
     "saveFailed": "更新失败：{{msg}}",
-    "opFailed": "操作失败：{{msg}}"
+    "opFailed": "操作失败：{{msg}}",
+    "unnamed": "未命名任务"
   },
   "findings": {
     "stat": {
@@ -1944,5 +1945,13 @@
     "format": "报告格式",
     "formatDocx": "Word 文档 (.docx)",
     "formatMd": "Markdown 交付包 (.zip：md+截图)"
+  },
+  "search": {
+    "button": "搜索",
+    "placeholder": "搜索页面…",
+    "empty": "未找到结果。"
+  },
+  "meta": {
+    "title": "AntiFox — 自主渗透测试控制台"
   }
 }

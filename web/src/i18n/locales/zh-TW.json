@@ -1611,7 +1611,8 @@
     "goalEditHint": "修改目標會引導後續規劃（不會自動重新拆解，請搭配「繼續執行」使其生效）。",
     "saved": "任務已更新",
     "saveFailed": "更新失敗：{{msg}}",
-    "opFailed": "操作失敗：{{msg}}"
+    "opFailed": "操作失敗：{{msg}}",
+    "unnamed": "未命名任務"
   },
   "findings": {
     "stat": {
@@ -1944,5 +1945,13 @@
     "format": "報告格式",
     "formatDocx": "Word 文件 (.docx)",
     "formatMd": "Markdown 交付包 (.zip：md+截圖)"
+  },
+  "search": {
+    "button": "搜尋",
+    "placeholder": "搜尋頁面…",
+    "empty": "找不到結果。"
+  },
+  "meta": {
+    "title": "AntiFox — 自主滲透測試控制台"
   }
 }
