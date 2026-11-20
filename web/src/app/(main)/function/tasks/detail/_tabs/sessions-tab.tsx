@@ -275,32 +275,41 @@ export function SessionsTab({ taskId }: { taskId: string }) {
   React.useEffect(() => {
     setAllActivity([]);
     setLoaded(false);
-    // Mock demo：无 SSE 后端，一次性拉取活动快照（执行过程）。
-    if (MOCK) {
-      api
-        .activity(taskId)
-        .then((r) => setAllActivity(r.items))
-        .catch(() => {})
-        .finally(() => setLoaded(true));
-      return;
-    }
+    let alive = true;
+    // mergeBySeq de-dups by seq so the initial history fetch and the live SSE
+    // frames can both feed setAllActivity without duplicating or dropping steps.
+    const mergeBySeq = (prev: Activity[], add: Activity[]) => {
+      const seen = new Set(prev.map((x) => x.seq));
+      const extra = add.filter((x) => !seen.has(x.seq));
+      return extra.length ? [...prev, ...extra].sort((p, q) => p.seq - q.seq) : prev;
+    };
+    // Load history through the normal authenticated API first. This goes through
+    // the reverse proxy like every other request and does NOT depend on SSE, so
+    // the transcript shows even when the SSE stream never opens (e.g. the stream
+    // base is unreachable, or a proxy buffers it). Previously `loaded` only ever
+    // flipped on es.onopen, so a blocked stream span the panel forever.
+    api
+      .activity(taskId, { limit: 2000 })
+      .then((r) => { if (alive) setAllActivity((prev) => mergeBySeq(prev, r.items)); })
+      .catch(() => {})
+      .finally(() => { if (alive) setLoaded(true); });
+    if (MOCK) return () => { alive = false; };
     const es = new EventSource(
       sseUrl(`/api/exploration/activity/stream?task=${encodeURIComponent(taskId)}&since=0`),
     );
-    es.onopen = () => setLoaded(true);
+    es.onopen = () => { if (alive) setLoaded(true); };
     es.onmessage = (e) => {
       try {
         const a = JSON.parse(e.data) as Activity;
-        setAllActivity((prev) =>
-          prev.some((x) => x.seq === a.seq)
-            ? prev
-            : [...prev, a].sort((p, q) => p.seq - q.seq),
-        );
+        if (alive) setAllActivity((prev) => mergeBySeq(prev, [a]));
       } catch {
         /* ignore malformed frame */
       }
     };
-    return () => es.close();
+    // EventSource auto-reconnects on error; never let a stream failure block the
+    // UI — history already loaded above, and a reconnect replays since=0.
+    es.onerror = () => {};
+    return () => { alive = false; es.close(); };
   }, [taskId]);
 
   // Worker session list derives from exploration intents — poll lightly (changes
