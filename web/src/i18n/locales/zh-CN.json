@@ -1423,6 +1423,8 @@
     "copied": "已复制",
     "header": {
       "llmConfigured": "LLM 已配置",
+      "llmNotConfigured": "未启用 LLM",
+      "llmNotConfiguredHint": "没有已激活的 LLM 配置，或激活的配置缺少 API key —— 引擎处于空闲。请在 LLM 设置中激活一个配置。",
       "pause": "暂停",
       "resume": "恢复",
       "rerun": "继续运行",

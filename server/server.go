@@ -227,8 +227,10 @@ func New(ctx context.Context, m *Manager, skillDir string, dataDir string) *Serv
 		} else {
 			log.Printf("[engine] LLM configured from env: %s / %s", cfg.Provider(), cfg.Model)
 		}
+	} else if p, perr := m.pg.ActiveProfile(); perr == nil && p != nil {
+		log.Printf("[engine] active LLM profile %q has no API key — engine idle; set the key in the LLM settings", p.Name)
 	} else {
-		log.Printf("[engine] no LLM provider configured — engine idle until set via /api/llm or env")
+		log.Printf("[engine] no active LLM profile — engine idle; add one and activate it in the LLM settings (or set env)")
 	}
 	// reload tasks persisted on disk so the task list survives a restart, and
 	// restore persisted paused state (so a task paused before restart stays paused).

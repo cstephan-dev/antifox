@@ -1423,6 +1423,8 @@
     "copied": "已複製",
     "header": {
       "llmConfigured": "LLM 已設定",
+      "llmNotConfigured": "未啟用 LLM",
+      "llmNotConfiguredHint": "沒有已啟用的 LLM 設定，或啟用的設定缺少 API key —— 引擎處於閒置。請在 LLM 設定中啟用一個設定。",
       "pause": "暫停",
       "resume": "恢復",
       "rerun": "繼續執行",

@@ -64,6 +64,8 @@ function TaskDetailInner() {
   const [task, setTask] = React.useState<Task | null>(null);
   const [paused, setPaused] = React.useState(false);
   const [loaded, setLoaded] = React.useState(false);
+  // null = unknown (stats not loaded); true/false = engine has a usable LLM provider.
+  const [llmReady, setLlmReady] = React.useState<boolean | null>(null);
   const [tab, setTab] = React.useState("sessions");
   const [interceptPendingCount, setInterceptPendingCount] = React.useState(0);
   const [profiles, setProfiles] = React.useState<LLMProfile[]>([]);
@@ -102,6 +104,7 @@ function TaskDetailInner() {
         }
         setTask(base);
         setPaused(at?.paused ?? base?.paused ?? false);
+        setLlmReady((s as { llm_configured?: boolean } | null)?.llm_configured ?? null);
       })
       .catch(() => {})
       .finally(() => setLoaded(true));
@@ -206,9 +209,18 @@ function TaskDetailInner() {
           </code>
           <Separator orientation="vertical" className="mx-1 h-4" />
           {/* status pills */}
-          <span className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs">
-            <BrainIcon className="size-3.5 text-emerald-500" /> {tr("taskDetail.header.llmConfigured")}
-          </span>
+          {llmReady === false ? (
+            <span
+              className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 px-2 py-0.5 text-xs text-amber-600 dark:text-amber-400"
+              title={tr("taskDetail.header.llmNotConfiguredHint")}
+            >
+              <BrainIcon className="size-3.5 text-amber-500" /> {tr("taskDetail.header.llmNotConfigured")}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs">
+              <BrainIcon className="size-3.5 text-emerald-500" /> {tr("taskDetail.header.llmConfigured")}
+            </span>
+          )}
           <StatusBadge domain="engine" value={engineMode} dot />
           <div className="ml-auto flex items-center gap-2">
             <Button size="sm" variant="outline" onClick={openEdit}>

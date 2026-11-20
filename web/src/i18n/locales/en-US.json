@@ -1423,6 +1423,8 @@
     "copied": "Copied",
     "header": {
       "llmConfigured": "LLM configured",
+      "llmNotConfigured": "No active LLM",
+      "llmNotConfiguredHint": "No LLM profile is active, or the active one has no API key — the engine is idle. Activate a profile in the LLM settings.",
       "pause": "Pause",
       "resume": "Resume",
       "rerun": "Continue running",
