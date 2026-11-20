@@ -15,6 +15,7 @@ import {
   CircleSlashIcon,
   ShieldAlertIcon,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Transcript } from "@/components/transcript";
 import { TodoPopover } from "@/components/todo-popover";
@@ -76,9 +77,9 @@ function fmtDuration(ms: number): string {
 }
 
 const roleMeta = {
-  mainagent: { label: "主 Agent", icon: UserIcon },
-  planner: { label: "规划 Planner", icon: BrainIcon },
-  worker: { label: "Workers", icon: RadioIcon },
+  mainagent: { label: "taskDetail.sessions.roleMain", icon: UserIcon },
+  planner: { label: "taskDetail.sessions.rolePlanner", icon: BrainIcon },
+  worker: { label: "taskDetail.sessions.roleWorkers", icon: RadioIcon },
 } as const;
 
 // The main-agent session is the interactive entry point of this tab and has no
@@ -88,7 +89,7 @@ const MAIN_ID = "s-main";
 const MAIN_SESSION: Session = {
   id: MAIN_ID,
   role: "mainagent",
-  title: "主 Agent · 编排会话",
+  title: "taskDetail.sessions.mainTitle", // i18n key, see fixedTitle
   status: "running",
   live: true,
   last_activity: "",
@@ -102,11 +103,17 @@ const PLANNER_ID = "s-planner";
 const PLANNER_SESSION: Session = {
   id: PLANNER_ID,
   role: "planner",
-  title: "规划 Planner · 态势研判",
+  title: "taskDetail.sessions.plannerTitle", // i18n key, see fixedTitle
   status: "running",
   live: true,
   last_activity: "",
 };
+
+// fixedTitle: the two built-in sessions carry an i18n key as title; worker
+// titles are free text and must not go through t().
+function fixedTitle(s: Session, t: (k: string) => string): string {
+  return s.id === MAIN_ID || s.id === PLANNER_ID ? t(s.title) : s.title;
+}
 
 // Map an exploration intent (TaskNode) state → a session status the UI renders.
 function intentStatus(state: string): SessionStatus {
@@ -155,6 +162,7 @@ function SessionItem({
   hasPending?: boolean;
   onClick: () => void;
 }) {
+  const { t } = useTranslation();
   const icon =
     s.role === "worker" ? (
       statusIcon(s.status)
@@ -183,7 +191,7 @@ function SessionItem({
       {s.live && (
         <span className="inline-flex items-center gap-1 rounded bg-blue-500/15 px-1.5 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400">
           <span className="size-1 animate-pulse rounded-full bg-blue-500" />
-          实时
+          {t("taskDetail.sessions.live")}
         </span>
       )}
     </button>
@@ -191,6 +199,7 @@ function SessionItem({
 }
 
 export function SessionsTab({ taskId }: { taskId: string }) {
+  const { t } = useTranslation();
   const [activeId, setActiveId] = React.useState(MAIN_ID);
   // Live activity stream — the primary data for this tab.
   const [allActivity, setAllActivity] = React.useState<Activity[]>([]);
@@ -387,9 +396,9 @@ export function SessionsTab({ taskId }: { taskId: string }) {
       // optimistic local echo — drop any entry the persisted (SSE) copy already
       // covers, so messages don't show twice once the backend round-trips.
       const mine = allActivity.filter((a) => a.worker === "mainagent");
-      const seen = new Set(mine.map((a) => `${a.kind} ${a.summary}`));
+      const seen = new Set(mine.map((a) => `${a.kind}\u0000${a.summary}`));
       const pending = chatExtra.filter(
-        (a) => !seen.has(`${a.kind} ${a.summary}`),
+        (a) => !seen.has(`${a.kind}\u0000${a.summary}`),
       );
       return [...mine, ...pending].sort((a, b) => a.seq - b.seq);
     }
@@ -542,7 +551,7 @@ export function SessionsTab({ taskId }: { taskId: string }) {
             worker: "mainagent",
             ts: new Date().toISOString(),
             kind: "text",
-            summary: "（发送失败，请稍后重试）",
+            summary: t("taskDetail.sessions.sendFailed"),
           },
         ]);
       })
@@ -555,13 +564,13 @@ export function SessionsTab({ taskId }: { taskId: string }) {
       {/* Left: session list */}
       <div className="flex flex-col overflow-hidden rounded-lg border bg-card">
         <div className="border-b px-3 py-2">
-          <div className="text-xs font-medium text-muted-foreground">会话列表</div>
+          <div className="text-xs font-medium text-muted-foreground">{t("taskDetail.sessions.listTitle")}</div>
           {taskTokens && (
             <div
               className="mt-1 text-[11px] tabular-nums text-muted-foreground"
-              title="整个任务所有 agent 的 token 合计"
+              title={t("taskDetail.sessions.taskTotalHint")}
             >
-              任务总计 · input {fmtTokens(taskTokens.input_tokens)} · cache{" "}
+              {t("taskDetail.sessions.taskTotal")} · input {fmtTokens(taskTokens.input_tokens)} · cache{" "}
               {fmtTokens(taskTokens.cache_read_tokens)} · output {fmtTokens(taskTokens.output_tokens)}
             </div>
           )}
@@ -576,7 +585,7 @@ export function SessionsTab({ taskId }: { taskId: string }) {
                 <div key={role} className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-muted-foreground">
                     <Meta.icon className="size-3.5" />
-                    {Meta.label}
+                    {t(Meta.label)}
                   </div>
                   {items.map((s) => {
                     const meta = s.role === "worker" ? sessionMeta.get(s.id) : undefined;
@@ -585,7 +594,7 @@ export function SessionsTab({ taskId }: { taskId: string }) {
                         key={s.id}
                         s={s}
                         active={s.id === activeId}
-                        displayTitle={meta?.title ?? s.title}
+                        displayTitle={meta?.title ?? fixedTitle(s, t)}
                         hasPending={hasPendingForSession(s)}
                         onClick={() => setActiveId(s.id)}
                       />
@@ -596,7 +605,7 @@ export function SessionsTab({ taskId }: { taskId: string }) {
             })}
             {loaded && !workerSessions.length && (
               <div className="px-2 py-1 text-xs text-muted-foreground">
-                暂无运行中的 Worker 会话。
+                {t("taskDetail.sessions.noWorkers")}
               </div>
             )}
           </div>
@@ -611,7 +620,7 @@ export function SessionsTab({ taskId }: { taskId: string }) {
             const meta = isWorker ? sessionMeta.get(active.id) : undefined;
             // Worker: the intent moved into the transcript as a message, so the
             // header shows a stable generic label (intent JSON stays on hover).
-            const title = isWorker ? "Worker 执行会话" : active.title;
+            const title = isWorker ? t("taskDetail.sessions.workerTitle") : fixedTitle(active, t);
             const titleEl = <span className="text-sm font-medium">{title}</span>;
             return meta?.json ? (
               <Tooltip>
@@ -627,7 +636,7 @@ export function SessionsTab({ taskId }: { taskId: string }) {
           {active.live && (
             <span className="inline-flex items-center gap-1 rounded bg-blue-500/15 px-1.5 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400">
               <span className="size-1 animate-pulse rounded-full bg-blue-500" />
-              实时
+              {t("taskDetail.sessions.live")}
             </span>
           )}
           <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
@@ -639,13 +648,13 @@ export function SessionsTab({ taskId }: { taskId: string }) {
             {runDuration != null && (
               <span
                 className="inline-flex items-center gap-1"
-                title="运行时长（首步 → 末步）"
+                title={t("taskDetail.sessions.durationHint")}
               >
                 <ClockIcon className="size-3" />
                 {fmtDuration(runDuration)}
               </span>
             )}
-            {isMain && <span>可交互</span>}
+            {isMain && <span>{t("taskDetail.sessions.interactive")}</span>}
           </div>
         </div>
         {/* Force Radix's internal viewport wrapper (display:table, sizes to content)
@@ -660,15 +669,15 @@ export function SessionsTab({ taskId }: { taskId: string }) {
             {!loaded ? (
               <div className="flex items-center gap-2 pl-9 text-xs text-muted-foreground">
                 <Loader2Icon className="size-3.5 animate-spin" />
-                加载活动流…
+                {t("taskDetail.sessions.loading")}
               </div>
             ) : activity.length ? (
               <Transcript activity={activity} live={active.live} taskId={taskId} chat={isMain} />
             ) : (
               <div className="pl-9 text-xs text-muted-foreground">
                 {isMain
-                  ? "还没有对话。在下方给主 Agent 发消息，引导探索方向或介入流程。"
-                  : "暂无活动记录。"}
+                  ? t("taskDetail.sessions.emptyMain")
+                  : t("taskDetail.sessions.emptyOther")}
               </div>
             )}
           </div>
@@ -676,7 +685,7 @@ export function SessionsTab({ taskId }: { taskId: string }) {
         {isMain ? (
           <div className="flex items-center gap-2 border-t p-3">
             <Input
-              placeholder="给主 Agent 发消息，引导探索方向…"
+              placeholder={t("taskDetail.sessions.placeholder")}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
@@ -685,7 +694,7 @@ export function SessionsTab({ taskId }: { taskId: string }) {
               disabled={mainLive}
             />
             {mainLive ? (
-              <Button size="icon" variant="destructive" onClick={stop} disabled={stopping} title="停止当前执行">
+              <Button size="icon" variant="destructive" onClick={stop} disabled={stopping} title={t("taskDetail.sessions.stop")}>
                 {stopping ? <Loader2Icon className="animate-spin" /> : <SquareIcon />}
               </Button>
             ) : (

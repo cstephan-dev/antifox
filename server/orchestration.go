@@ -9,9 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"antifox/engine/agentcore"
 	"antifox/engine/permission"
 	actool "antifox/engine/tool"
 	"antifox/agent"
+	"antifox/report"
 )
 
 // jsonResult marshals v to a JSON tool result.
@@ -390,6 +392,9 @@ func (s *Server) seedOrchestrationTools() {
 	}
 	s.refreshBuiltinToolSchemas()
 	s.migrateEnglishSeeds() // inmind fork: untouched upstream seeds → English (english_seeds.go)
+	if report.DefaultLocale() == "en-US" { // inmind fork: agents answer in English (prompts/skills may still be Chinese)
+		agentcore.LanguageDirective = englishLanguageDirective
+	}
 	s.refreshReportFindingSchema() // 新增 reproduction 结构化复现过程参数 → 推到旧库,否则 agent 看不到
 	s.seedAutoDefaultBindings()
 	s.seedPlannerDefaultBindings()

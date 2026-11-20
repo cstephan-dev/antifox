@@ -374,9 +374,18 @@ func buildSystemReminder(extra string) string {
 	return b.String()
 }
 
+// LanguageDirective, if non-empty, is appended to every session's system prompt
+// (after SystemPrompt/AppendSystemPrompt). The host sets it once at startup, e.g.
+// to make every agent answer in the deployment's language regardless of the
+// language of a stored prompt, skill or tool description.
+var LanguageDirective string
+
 func (s *Session) system() []string {
 	out := append([]string(nil), s.opts.SystemPrompt...)
 	out = append(out, s.opts.AppendSystemPrompt...)
+	if LanguageDirective != "" {
+		out = append(out, LanguageDirective)
+	}
 	if s.opts.Memory != nil && s.opts.Memory.Store != nil && s.opts.Memory.IncludeIndexInPrompt {
 		out = append(out, s.opts.Memory.Store.SystemSegment())
 	}

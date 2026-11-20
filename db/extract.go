@@ -29,12 +29,12 @@ func (d *DB) ExplorationSynthesis(expID int64, maxChars int) string {
 		if b.Len()+len(content) > maxChars {
 			remain := maxChars - b.Len()
 			if remain > 200 {
-				b.WriteString("\n【" + worker + "】\n")
+				b.WriteString("\n[" + worker + "]\n")
 				b.WriteString(content[:remain])
 			}
 			break
 		}
-		b.WriteString("\n【" + worker + "】\n")
+		b.WriteString("\n[" + worker + "]\n")
 		b.WriteString(content)
 	}
 	return b.String()
@@ -89,11 +89,11 @@ func (d *DB) FindingReproTranscript(nodeID int64, maxChars int) string {
 		} else if kind == "result" {
 			label = "Summary"
 		}
-		hdr := "\n【" + label
+		hdr := "\n[" + label
 		if tool != "" {
 			hdr += ":" + tool
 		}
-		hdr += "】\n"
+		hdr += "]\n"
 		if b.Len()+len(hdr)+len(content) > maxChars {
 			break
 		}
@@ -131,11 +131,11 @@ func (d *DB) FindingSourceTranscript(nodeID int64, maxChars int) string {
 		if err := rows.Scan(&worker, &kind, &tool, &content); err != nil {
 			break
 		}
-		hdr := "\n【" + worker + " · " + kind
+		hdr := "\n[" + worker + " · " + kind
 		if tool != "" {
 			hdr += ":" + tool
 		}
-		hdr += "】\n"
+		hdr += "]\n"
 		if b.Len()+len(hdr)+len(content) > maxChars {
 			if remain := maxChars - b.Len() - len(hdr); remain > 200 {
 				b.WriteString(hdr)

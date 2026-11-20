@@ -1570,6 +1570,27 @@
       "genStarted": "已开始生成报告，请稍候…",
       "genFailed": "报告生成失败：{{msg}}",
       "docxHint": "「生成 Word 报告」调用 AI 将发现改写为专业中文叙述，并用 python-docx 排版成交付级 .docx；下方为 Markdown 快速预览。"
+    },
+    "sessions": {
+      "roleMain": "主 Agent",
+      "rolePlanner": "规划 Planner",
+      "roleWorkers": "Workers",
+      "mainTitle": "主 Agent · 编排会话",
+      "plannerTitle": "规划 Planner · 态势研判",
+      "workerTitle": "Worker 执行会话",
+      "live": "实时",
+      "sendFailed": "（发送失败，请稍后重试）",
+      "listTitle": "会话列表",
+      "taskTotalHint": "整个任务所有 agent 的 token 合计",
+      "taskTotal": "任务总计",
+      "noWorkers": "暂无运行中的 Worker 会话。",
+      "durationHint": "运行时长（首步 → 末步）",
+      "interactive": "可交互",
+      "loading": "加载活动流…",
+      "emptyMain": "还没有对话。在下方给主 Agent 发消息，引导探索方向或介入流程。",
+      "emptyOther": "暂无活动记录。",
+      "placeholder": "给主 Agent 发消息，引导探索方向…",
+      "stop": "停止当前执行"
     }
   },
   "tasks": {

@@ -1570,6 +1570,27 @@
       "genStarted": "Report generation started, please wait…",
       "genFailed": "Report generation failed: {{msg}}",
       "docxHint": "\"Generate Word Report\" uses AI to rewrite findings into professional prose and lays it out as a delivery-grade .docx via python-docx; the Markdown quick preview is below."
+    },
+    "sessions": {
+      "roleMain": "Main agent",
+      "rolePlanner": "Planner",
+      "roleWorkers": "Workers",
+      "mainTitle": "Main agent · Orchestration",
+      "plannerTitle": "Planner · Situation assessment",
+      "workerTitle": "Worker session",
+      "live": "Live",
+      "sendFailed": "(Sending failed, please try again later)",
+      "listTitle": "Sessions",
+      "taskTotalHint": "Token total across all agents of this task",
+      "taskTotal": "Task total",
+      "noWorkers": "No worker sessions running.",
+      "durationHint": "Run time (first step → last step)",
+      "interactive": "Interactive",
+      "loading": "Loading activity…",
+      "emptyMain": "No conversation yet. Message the main agent below to steer the exploration or step in.",
+      "emptyOther": "No activity yet.",
+      "placeholder": "Message the main agent to steer the exploration…",
+      "stop": "Stop current run"
     }
   },
   "tasks": {

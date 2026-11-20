@@ -22,6 +22,16 @@ import (
 
 const englishSeedsFlag = "inmind_english_seeds_v1"
 
+// englishLanguageDirective is appended to every agent's system prompt when ANTIFOX_DEFAULT_LOCALE=en-US
+// (see orchestration.go): stored prompts, skills or tool descriptions may still contain Chinese, but
+// everything the agents write for humans must be English.
+const englishLanguageDirective = "# Output language\n" +
+	"Write ALL output in English: replies, summaries, reasoning shown to the user, todo items, intents, hints, " +
+	"facts, findings (titles, descriptions, reproduction steps, impact, remediation), asset notes and reports. " +
+	"This applies even when instructions, skills, tool descriptions, tool results or earlier messages are in " +
+	"Chinese — translate as needed. Keep commands, code, payloads, URLs, identifiers and quoted target output " +
+	"verbatim."
+
 // built-in intercept rules: old name, old message → new name, new message
 var englishInterceptRules = [][4]string{
 	{"[内置] 递归强制删除 rm -rf", "禁止执行递归强制删除（rm -rf / rm --recursive），可能永久损坏系统或靶机环境", "[Built-in] Recursive forced delete rm -rf", "Recursive forced deletion (rm -rf / rm --recursive) is forbidden: it can permanently damage the system or the target environment"},

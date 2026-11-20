@@ -153,19 +153,19 @@ export function FindingDetail({ finding, onChanged }: { finding: Finding; onChan
   // pasting a single vuln into tickets/chat without exporting a full report.
   function copyReport() {
     const L: string[] = [`# ${name}`];
-    const meta = [`${t("findings.colSeverity")}：${t(`status.severity.${severity}`)}`];
-    if (target) meta.push(`${t("findings.colTarget")}：${target}`);
+    const meta = [`${t("findings.colSeverity ")}: ${t(`status.severity.${severity}`)}`];
+    if (target) meta.push(`${t("findings.colTarget")}: ${target}`);
     if (enr && enr.cvss_score > 0) meta.push(`CVSS ${enr.cvss_score.toFixed(1)}${enr.cvss_vector ? ` ${enr.cvss_vector}` : ""}`);
-    L.push(meta.join("　·　"));
+    L.push(meta.join(" · "));
     const desc = enr?.description?.length ? enr.description : finding.summary ? [finding.summary] : [];
     if (desc.length) L.push(`\n## ${t("findings.descLabel")}`, ...desc);
     if (enr?.risk_analysis?.length) L.push(`\n## ${t("findings.riskAnalysis")}`, ...enr.risk_analysis.map((r, i) => `${i + 1}. ${r}`));
     if (enr?.remediation?.length) L.push(`\n## ${t("findings.remediation")}`, ...enr.remediation.map((r, i) => `${i + 1}. ${r}`));
     if (repro?.entry_point || (repro?.steps?.length ?? 0) > 0) {
       L.push(`\n## ${t("findings.testProcess")}`);
-      if (repro?.entry_point) L.push(`${t("findings.reproEntry")}：${repro.entry_point}`);
+      if (repro?.entry_point) L.push(`${t("findings.reproEntry")}: ${repro.entry_point}`);
       (repro?.steps ?? []).forEach((st, i) => {
-        const d = [st.expected, st.proves].filter(Boolean).join(" ｜ ");
+        const d = [st.expected, st.proves].filter(Boolean).join(" | ");
         L.push(`\n${t("findings.reproStep")} ${i + 1}${d ? ` — ${d}` : ""}`);
         if (st.request?.trim()) L.push(st.request.trim());
         if (st.response?.trim()) L.push(`${t("findings.reproResponse")}:\n${st.response.trim()}`);
@@ -487,13 +487,13 @@ function ReproductionSection({
               <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
                 {repro?.entry_point && (
                   <p className="break-words">
-                    <span className="text-muted-foreground">{t("findings.reproEntry")}：</span>
+                    <span className="text-muted-foreground">{t("findings.reproEntry")}: </span>
                     <code className="break-all font-mono">{repro.entry_point}</code>
                   </p>
                 )}
                 {(repro?.prerequisites?.length ?? 0) > 0 && (
                   <div className="mt-1">
-                    <span className="text-muted-foreground">{t("findings.reproPrereq")}：</span>
+                    <span className="text-muted-foreground">{t("findings.reproPrereq")}: </span>
                     <ul className="ml-4 list-disc break-words">
                       {repro!.prerequisites!.map((p, i) => (
                         <li key={i}>{p}</li>
@@ -506,7 +506,7 @@ function ReproductionSection({
             {/* 分步：每步 说明 + 逐字请求 + 该步证据 */}
             {steps.map((st, i) => {
               const n = i + 1;
-              const desc = [st.expected, st.proves].filter(Boolean).join(" ｜ ");
+              const desc = [st.expected, st.proves].filter(Boolean).join(" | ");
               return (
                 <div key={n} className="rounded-md border px-3 py-2">
                   <div className="flex items-baseline gap-2">
@@ -548,7 +548,7 @@ function ReproductionSection({
                     onChanged={load}
                     suggestedCaption={
                       (st.proves || st.expected || "").trim()
-                        ? `${t("findings.reproStep")} ${n}：${(st.proves || st.expected || "").trim().split("\n")[0].slice(0, 120)}`
+                        ? `${t("findings.reproStep")} ${n}: ${(st.proves || st.expected || "").trim().split("\n")[0].slice(0, 120)}`
                         : undefined
                     }
                   />
@@ -557,7 +557,7 @@ function ReproductionSection({
             })}
             {repro?.provenance && (
               <p className="text-xs text-muted-foreground break-words">
-                {t("findings.reproProvenance")}：{repro.provenance}
+                {t("findings.reproProvenance")}: {repro.provenance}
               </p>
             )}
             {/* 概览/未归属证据 */}

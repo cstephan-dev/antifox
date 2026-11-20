@@ -258,7 +258,7 @@ func TestConnection(ctx context.Context, c Config) (time.Duration, error) {
 	start := time.Now()
 	_, err = agentcore.Run(ctx, agentcore.Options{
 		Provider:       prov,
-		SystemPrompt:   []string{"你是连接测试。只回复 OK，不要别的。"},
+		SystemPrompt:   []string{"This is a connection test. Reply with OK only, nothing else."},
 		PermissionMode: acperm.ModeBypass,
 		MaxTurns:       1,
 		MaxTokens:      32,
